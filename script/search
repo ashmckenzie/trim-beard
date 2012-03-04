@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+Bundler.require(:default, :development)
+
+opts = Trollop::options do
+  opt :verbose, "Verbose mode"
+  opt :debug, "Verbose mode"
+  opt :query, "Query to perform", :type => :string, :required => true
+end
+
+require_relative '../lib/init'
+
+Providers::NZBMatrix::Request.search(opts[:query])

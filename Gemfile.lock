@@ -1,0 +1,27 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    awesome_print (1.0.2)
+    coderay (1.0.5)
+    method_source (0.7.0)
+    mime-types (1.17.2)
+    pry (0.9.8.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.7)
+      slop (< 3, >= 2.4.4)
+    pry-nav (0.1.0)
+      pry (~> 0.9.8.1)
+    rest-client (1.6.7)
+      mime-types (>= 1.16)
+    slop (2.4.4)
+    trollop (1.16.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  awesome_print
+  pry
+  pry-nav
+  rest-client
+  trollop

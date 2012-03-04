@@ -1,0 +1,5 @@
+---
+credentials:
+  nzbmatrix:
+    username: <username>
+    api_key: <api_key>
