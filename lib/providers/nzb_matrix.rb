@@ -4,18 +4,22 @@ module Providers
     class Base
 
       def username
-        config['username'] or raise Exceptions::CredentialsMissing.new('Username not set')
+        config['credentials']['username'] or raise Exceptions::CredentialsMissing.new('Username not set')
       end
 
       def api_key
-        config['api_key'] or raise Exceptions::CredentialsMissing.new('API key not set')
+        config['credentials']['api_key'] or raise Exceptions::CredentialsMissing.new('API key not set')
       end 
+
+      def watch_directory
+        config['directories']['watch'] or raise Exceptions::Missing.new('Watch directory not set')
+      end
 
       private
 
       def config
         unless @config
-          config = APP_CONFIG['credentials']['nzbmatrix']
+          config = APP_CONFIG['nzbmatrix']
         else
           @config
         end
@@ -68,8 +72,12 @@ module Providers
         end
       end
 
-      def download
+      def download file_name=nil
         url = sprintf(DOWNLOAD_URL, nzbid, username, api_key)
+        nzb_data = RestClient.get(url)
+        f = File.new(File.join(watch_directory, file_name ? file_name : suitable_file_name), 'w')
+        f.write(nzb_data)
+        f.close
       end
 
       def suitable_file_name
