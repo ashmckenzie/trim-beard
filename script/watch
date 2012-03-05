@@ -4,21 +4,22 @@ require 'rubygems'
 require 'bundler/setup'
 Bundler.require(:default, :development)
 
+require_relative '../lib/init'
+
 opts = Trollop::options do
-  opt :verbose, "Verbose mode"
-  opt :debug, "Verbose mode"
+  opt :quiet, "Quiet mode"
+  opt :debug, "Debug mode"
 end
 
-require_relative '../lib/init'
-require_relative '../lib/watchers/watcher.rb'
+$logger.level = :off if opts[:quiet]
+$logger.level = :debug if opts[:debug]
 
 watchers = []
 
-Dir['lib/watchers/**'].each do |f|
-  require File.join($APP_ROOT, f)
-  file = Pathname.new(f)
-  klass = Watchers.const_get(file.basename.to_s.sub(file.basename.extname, '').capitalize.gsub(/_(.{1})/) { |m| m[1].upcase })
-  watchers << Thread.new { klass.new }
+Configuration.get('watchers').each do |name, options|
+  require File.join($APP_ROOT, 'lib', 'watchers', "#{name}")
+  klass = Watchers.const_get(name.capitalize.gsub(/_(.{1})/) { |m| m[1].upcase })
+  watchers << Thread.new { klass.new(options['paths']) }
 end
 
 watchers.each { |w| w.join }

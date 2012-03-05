@@ -1,45 +1,59 @@
 module Providers
-  module NZBMatrix
-    class Base
+  module NzbMatrix
 
-      def username
-        config['credentials']['username'] or raise Exceptions::CredentialsMissing.new('Username not set')
+    class Options
+
+      include Singleton
+
+      def self.setup options={}
+        @options = options
+        raise Exceptions::CredentialsMissing.new('Username not set') unless options['credentials']['username']  
+        raise Exceptions::CredentialsMissing.new('API key not set') unless options['credentials']['api_key']
       end
 
-      def api_key
-        config['credentials']['api_key'] or raise Exceptions::CredentialsMissing.new('API key not set')
-      end 
-
-      def watch_directory
-        config['directories']['watch'] or raise Exceptions::Missing.new('Watch directory not set')
-      end
-
-      private
-
-      def config
-        @config ||= Configuration.providers['nzbmatrix']
+      def self.get key
+        @options[key]
       end
     end
 
-    class Request < Base
+    class Search
 
       SEARCH_URL = "http://api.nzbmatrix.com/v1.1/search.php?search=%s&catid=%s&username=%s&apikey=%s"
+      CATEGORIES = {
+        'movie' => 'movies-all',
+        'tv' => 'tv-all'
+      }
 
-      def self.search query
-        new.search(query)
+      def initialize query, category, download, options={}
+        Options.setup(options)
+        credentials = Options.get('credentials')
+
+        begin
+          url = URI.escape(sprintf(SEARCH_URL, query, CATEGORIES[category], credentials['username'], credentials['api_key']))
+          $logger.debug "url=[#{url}]"
+          #response = Response.new(RestClient.get(url))
+          response = Response.new(File.new('./tmp/zoolander.data').readlines.join("\n"))
+        rescue SocketError => e
+        end
+
+        matches = response.items.select do |item|
+          item.category =~ /Xvid/
+        end.sort do |x, y| 
+          y.hits.to_i <=> x.hits.to_i
+        end
+
+        if download
+          matches.first.download
+        else
+          # TODO: Interactive choice if not --download
+          matches.each_with_index do |item, i|
+            puts "#{i+1}. #{item.nzbname}, #{item.size.to_f / 1024 / 1024} MB, #{item.hits} hits"
+          end
+        end
       end
-
-      def search query
-        #url = URI.escape(sprintf(SEARCH_URL, query, 'tv-all', username, api_key))
-        #url = URI.escape(sprintf(SEARCH_URL, query, 'movies-all', username, api_key))
-        #response = NZBMatrix::Response.new RestClient.get(url)
-        response = NZBMatrix::Response.new File.new('./tmp/zoolander.data').readlines.join("\n")
-        # response.items.select { |x| x.category =~ /Xvid/ }.sort { |x,y| y.hits.to_i <=> x.hits.to_i }
-      end
-
     end
 
-    class Response < Base
+    class Response
 
       attr_reader :items
 
@@ -57,7 +71,7 @@ module Providers
       end
     end
 
-    class Item < Base
+    class Item
 
       DOWNLOAD_URL = "http://api.nzbmatrix.com/v1.1/download.php?id=%s&username=%s&apikey=%s"
 
@@ -69,15 +83,28 @@ module Providers
       end
 
       def download file_name=nil
-        url = sprintf(DOWNLOAD_URL, nzbid, username, api_key)
-        # nzb_data = RestClient.get(url)
-        # f = File.new(File.join(watch_directory, file_name ? file_name : suitable_file_name), 'w')
-        # f.write(nzb_data)
-        # f.close
+        credentials = Options.get('credentials')
+        url = sprintf(DOWNLOAD_URL, nzbid, credentials['username'], credentials['api_key'])
+        $logger.debug "url=[#{url}]"
+
+        begin
+          nzb_data = RestClient.get(url)
+        rescue SocketError => e
+        end
+
+        file = File.join(Options.get('download_dir'), file_name ? file_name : suitable_file_name)
+
+        $logger.info "Downloaded '#{nzbname}' as #{file}"
+
+        f = File.new(file, 'w')
+        f.write(nzb_data)
+        f.close
       end
 
       def suitable_file_name
-        nzbname.gsub(/\s+/, '.') + ".nzb"
+        name = nzbname.gsub(/\s+/, '.') + ".nzb"
+        $logger.debug name
+        name
       end
 
     end

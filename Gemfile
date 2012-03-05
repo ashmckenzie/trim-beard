@@ -3,6 +3,7 @@ source :rubygems
 gem 'trollop'
 gem 'rest-client'
 gem 'guard'
+gem 'logging'
 
 group :development do
   gem 'pry'

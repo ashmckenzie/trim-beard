@@ -1,8 +1,10 @@
+require_relative './base.rb'
+
 module Watchers
-  class TvShows < Watcher
-    def initialize
-      watch '/tmp/watch/tv_shows' do |files|
-        puts "TvShow change: #{files.inspect}"
+  class TvShows < Base
+    def initialize paths=[]
+      watch paths do |path|
+        $logger.info "TvShow change: #{path.inspect}"
       end
     end
   end
