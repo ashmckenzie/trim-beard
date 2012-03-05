@@ -1,6 +1,5 @@
 module Providers
   module NZBMatrix
-
     class Base
 
       def username
@@ -18,11 +17,7 @@ module Providers
       private
 
       def config
-        unless @config
-          config = APP_CONFIG['nzbmatrix']
-        else
-          @config
-        end
+        @config ||= Configuration.providers['nzbmatrix']
       end
     end
 
@@ -36,9 +31,9 @@ module Providers
 
       def search query
         #url = URI.escape(sprintf(SEARCH_URL, query, 'tv-all', username, api_key))
-        url = URI.escape(sprintf(SEARCH_URL, query, 'movies-all', username, api_key))
-        response = NZBMatrix::Response.new RestClient.get(url)
-        binding.pry
+        #url = URI.escape(sprintf(SEARCH_URL, query, 'movies-all', username, api_key))
+        #response = NZBMatrix::Response.new RestClient.get(url)
+        response = NZBMatrix::Response.new File.new('./tmp/zoolander.data').readlines.join("\n")
         # response.items.select { |x| x.category =~ /Xvid/ }.sort { |x,y| y.hits.to_i <=> x.hits.to_i }
       end
 
@@ -53,6 +48,7 @@ module Providers
         response.split(/^\|$/).each do |raw_items| 
           keys_and_values = {}
           raw_items.strip.split(/\n/).collect do |value|
+            next if value.empty?
             k, v = value.split(/:/)
             keys_and_values[k.downcase] = v.gsub(/;$/, '')
           end
@@ -74,10 +70,10 @@ module Providers
 
       def download file_name=nil
         url = sprintf(DOWNLOAD_URL, nzbid, username, api_key)
-        nzb_data = RestClient.get(url)
-        f = File.new(File.join(watch_directory, file_name ? file_name : suitable_file_name), 'w')
-        f.write(nzb_data)
-        f.close
+        # nzb_data = RestClient.get(url)
+        # f = File.new(File.join(watch_directory, file_name ? file_name : suitable_file_name), 'w')
+        # f.write(nzb_data)
+        # f.close
       end
 
       def suitable_file_name

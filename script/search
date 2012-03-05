@@ -11,5 +11,6 @@ opts = Trollop::options do
 end
 
 require_relative '../lib/init'
+require_relative '../lib/providers'
 
 Providers::NZBMatrix::Request.search(opts[:query])
