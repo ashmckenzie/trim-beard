@@ -4,6 +4,8 @@ gem 'trollop'
 gem 'rest-client'
 gem 'guard'
 gem 'logging'
+gem 'tvdb_party'
+gem 'tmdb_party', :git => 'https://github.com/ashmckenzie/tmdb_party'
 
 group :development do
   gem 'pry'

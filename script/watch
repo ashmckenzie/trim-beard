@@ -9,6 +9,7 @@ require_relative '../lib/init'
 opts = Trollop::options do
   opt :quiet, "Quiet mode"
   opt :debug, "Debug mode"
+  opt :dry, "Dry run mode"
 end
 
 $logger.level = :off if opts[:quiet]
