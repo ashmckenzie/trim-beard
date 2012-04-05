@@ -10,7 +10,7 @@ class Configuration
 
   CONFIG_FILE = Pathname.new(File.expand_path(File.join($APP_ROOT, 'config', 'config.yml')))
 
-  def self.get key
+  def self.get
     unless @config
       if CONFIG_FILE.exist?
         @config = YAML.load_file(CONFIG_FILE)
@@ -19,6 +19,6 @@ class Configuration
         exit Errors::CONFIG_FILE_NOT_EXIST
       end      
     end
-    @config[key]
+    @config
   end
 end

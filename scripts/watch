@@ -17,10 +17,17 @@ $logger.level = :debug if opts[:debug]
 
 watchers = []
 
-Configuration.get('watchers').each do |name, options|
+Configuration.get['watchers'].each do |name, options|
   require File.join($APP_ROOT, 'lib', 'watchers', "#{name}")
   klass = Watchers.const_get(name.capitalize.gsub(/_(.{1})/) { |m| m[1].upcase })
-  watchers << Thread.new { klass.new(options['paths']) }
+  watchers << Thread.new { 
+    begin
+      klass.new(options)
+    rescue => e
+      Toadhopper.new(Configuration.get['errbit']['api_key'], :notify_host => Configuration.get['errbit']['host']).post!(e) if Configuration.get['errbit']['enable']
+      raise e
+    end
+  }
 end
 
 watchers.each { |w| w.join }

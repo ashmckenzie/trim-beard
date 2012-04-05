@@ -21,7 +21,7 @@ $logger.level = :debug if opts[:debug]
 
 searches = []
 
-Configuration.get('providers').each do |name, options|
+Configuration.get['providers'].each do |name, options|
   require File.join($APP_ROOT, 'lib', 'providers', "#{name}")
   provider_module = Providers.const_get(name.capitalize.gsub(/_(.{1})/) { |m| m[1].upcase })
   searches << Thread.new { provider_module.const_get('Search').new(opts[:query], opts[:category], opts[:download], options) }
